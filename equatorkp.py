@@ -10,6 +10,8 @@ class Equator(kp.Plugin):
     DEFAULT_KEEP_HISTORY = True
 
     keep_history = DEFAULT_KEEP_HISTORY
+    
+    ITEMCAT_VAR = kp.ItemCategory.USER_BASE + 1
 
     def __init__(self):
         super().__init__()
@@ -23,24 +25,33 @@ class Equator(kp.Plugin):
     def on_suggest(self, user_input, items_chain):
         if items_chain:
             return
-
+        suggestions = []
         try:
             command, expression = eq.splitInput(user_input)
+            if command not in ["ev", "eq"]: return
         except:
             return
         try:
             results = eq.runInput(command, expression)
-            suggestions = []
-            for r in results:
-                suggestions.append(self.create_item(
-                    name="EquatorResult",
-                    label=r,
-                    short_desc="Wow!"
-                ))
             
-        except:
-            return
+            for r in results:
+                r = str(r)
+                suggestions.append(self.create_item(
+                    category=self.ITEMCAT_VAR,
+                    label=r,
+                    short_desc="Equator",
+                    target=r,
+                    args_hint=kp.ItemArgsHint.FORBIDDEN,
+                    hit_hint=kp.ItemHitHint.IGNORE,
+                ))
         
+        except Exception as e:
+            suggestions.append(self.create_error_item(
+                label=expression,
+                short_desc="Error: " + str(e)))
+            print(e)
+        
+        self.set_suggestions(suggestions, kp.Match.ANY, kp.Sort.LABEL_ASC)
 
     def on_execute(self, item, action):
         if item.category() != kp.ItemCategory.URL:
