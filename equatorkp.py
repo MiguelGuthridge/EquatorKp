@@ -28,11 +28,11 @@ class Equator(kp.Plugin):
         suggestions = []
         try:
             command, expression = eq.splitInput(user_input)
-            if command not in ["ev", "eq"]: return
+            if command not in ["eq"]: return
         except:
             return
         try:
-            results = eq.runInput(command, expression)
+            results = eq.runInput(expression)
             
             for r in results:
                 r = str(r)
@@ -48,15 +48,15 @@ class Equator(kp.Plugin):
         except Exception as e:
             suggestions.append(self.create_error_item(
                 label=expression,
-                short_desc="Error: " + str(e)))
+                short_desc=str(e)))
             print(e)
         
         self.set_suggestions(suggestions, kp.Match.ANY, kp.Sort.LABEL_ASC)
 
     def on_execute(self, item, action):
-        if item.category() != kp.ItemCategory.URL:
+        if item.category() != self.ITEMCAT_VAR:
             return
-
+        
         
 
     def on_events(self, flags):
