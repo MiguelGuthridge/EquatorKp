@@ -39,7 +39,7 @@ class Equator(kp.Plugin):
                 suggestions.append(self.create_item(
                     category=self.ITEMCAT_VAR,
                     label=r,
-                    short_desc="Equator",
+                    short_desc="Equator - Enter to copy",
                     target=r,
                     args_hint=kp.ItemArgsHint.FORBIDDEN,
                     hit_hint=kp.ItemHitHint.IGNORE,
@@ -56,8 +56,8 @@ class Equator(kp.Plugin):
     def on_execute(self, item, action):
         if item.category() != self.ITEMCAT_VAR:
             return
-        
-        
+        if item and (item.category() == self.ITEMCAT_VAR):
+            kpu.set_clipboard(item.target())
 
     def on_events(self, flags):
         if flags & kp.Events.PACKCONFIG:
