@@ -1,9 +1,15 @@
 # Keypirinha: a fast launcher for Windows (keypirinha.com)
 
+import site
+import os
+
 import keypirinha as kp
 import keypirinha_util as kpu
 
-from .Equator.lib import main as eq
+# insert lib directory to path to import modules normally
+site.addsitedir(os.path.join(os.path.dirname(__file__), "include"))
+
+import equator as eq
 
 class Equator(kp.Plugin):
     """Evaluate expressions or solve equations"""
@@ -27,11 +33,17 @@ class Equator(kp.Plugin):
             return
         suggestions = []
         try:
+            
             command, expression = eq.splitInput(user_input)
+            print("HERE: " + user_input)
             if command not in ["eq"]: return
-        except:
+            
+        except Exception as e:
+            print(e)
+            print(dir(eq))
             return
         try:
+            
             results = eq.runInput(expression)
             
             for r in results:
