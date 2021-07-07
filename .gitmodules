@@ -1,0 +1,3 @@
+[submodule "include/equator"]
+	path = include/equator
+	url = https://github.com/MiguelGuthridge/Equator.git
