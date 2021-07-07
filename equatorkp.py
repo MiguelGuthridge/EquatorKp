@@ -35,12 +35,9 @@ class Equator(kp.Plugin):
         try:
             
             command, expression = eq.splitInput(user_input)
-            print("HERE: " + user_input)
             if command not in ["eq"]: return
             
         except Exception as e:
-            print(e)
-            print(dir(eq))
             return
         try:
             
@@ -61,7 +58,7 @@ class Equator(kp.Plugin):
             suggestions.append(self.create_error_item(
                 label=expression,
                 short_desc=str(e)))
-            print(e)
+            #print(e)
         
         self.set_suggestions(suggestions, kp.Match.ANY, kp.Sort.LABEL_ASC)
 
