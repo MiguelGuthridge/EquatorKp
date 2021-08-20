@@ -19,6 +19,10 @@ class Equator(kp.Plugin):
     
     ITEMCAT_VAR = kp.ItemCategory.USER_BASE + 1
 
+    PRIORITY_1 = "EqPriority 1"
+    PRIORITY_2 = "EqPriority 2"
+    PRIORITY_3 = "EqPriority 3"
+
     def __init__(self):
         super().__init__()
 
@@ -28,35 +32,135 @@ class Equator(kp.Plugin):
     def on_catalog(self):
         self.on_start()
 
-    def on_suggest(self, user_input, items_chain):
+    def on_suggest(self, user_input: str, items_chain):
         if items_chain:
             return
         suggestions = []
         try:
-            
-            command, expression = eq.splitInput(user_input)
-            if command not in ["eq"]: return
+            # Check that input starts with "eq"
+            command, expression = user_input.split(' ', 1)
+            if command != "eq": return
             
         except Exception as e:
             return
         try:
             
-            results = eq.runInput(expression)
+            results_exp = eq.Expression(expression)
+            results = results_exp.getOutputList()
             
-            for r in results:
-                r = str(r)
+            # No results
+            if len(results) == 0:
                 suggestions.append(self.create_item(
                     category=self.ITEMCAT_VAR,
-                    label=r,
-                    short_desc="Equator - Enter to copy",
-                    target=r,
+                    label="No Results",
+                    short_desc="Equator",
+                    target=self.PRIORITY_1,
                     args_hint=kp.ItemArgsHint.FORBIDDEN,
                     hit_hint=kp.ItemHitHint.IGNORE,
+                    data_bag = ""
                 ))
+            
+            # One result
+            elif len(results) == 1:
+                eqtns, exprs = results[0]
+                # For solutions and expressions
+                if len(exprs) >= 1 and len(eqtns) >= 1:
+                    exs = '; '.join(exprs)
+                    eqs = '; '.join(eqtns)
+                    if len(exs) and len(eqs):
+                        r = exs + "; " + eqs
+                    else:
+                        r = exs + eqs
+                    suggestions.append(self.create_item(
+                        category=self.ITEMCAT_VAR,
+                        label="Copy Full Solution",
+                        short_desc="Equator",
+                        target=self.PRIORITY_1,
+                        args_hint=kp.ItemArgsHint.FORBIDDEN,
+                        hit_hint=kp.ItemHitHint.IGNORE,
+                        data_bag=r
+                    ))
+                
+                # For multiple expressions
+                if len(exprs) > 1:
+                    r = "; ".join(exprs)
+                    suggestions.append(self.create_item(
+                        category=self.ITEMCAT_VAR,
+                        label="Copy all Expressions",
+                        short_desc="Equator",
+                        target=self.PRIORITY_2 + r,
+                        args_hint=kp.ItemArgsHint.FORBIDDEN,
+                        hit_hint=kp.ItemHitHint.IGNORE,
+                        data_bag=r
+                    ))
+                # For each expression
+                for x in exprs:
+                    suggestions.append(self.create_item(
+                        category=self.ITEMCAT_VAR,
+                        label=x,
+                        short_desc="Equator - Enter to Copy",
+                        target=self.PRIORITY_3 + x,
+                        args_hint=kp.ItemArgsHint.FORBIDDEN,
+                        hit_hint=kp.ItemHitHint.IGNORE,
+                        data_bag=x
+                    ))
+                # For multiple equations
+                if len(eqtns) > 1:
+                    r = "; ".join(eqtns)
+                    suggestions.append(self.create_item(
+                        category=self.ITEMCAT_VAR,
+                        label="Copy all Equations",
+                        short_desc="Equator",
+                        target=self.PRIORITY_2 + r,
+                        args_hint=kp.ItemArgsHint.FORBIDDEN,
+                        hit_hint=kp.ItemHitHint.IGNORE,
+                        data_bag=r
+                    ))
+                # For each equation
+                for q in eqtns:
+                    suggestions.append(self.create_item(
+                        category=self.ITEMCAT_VAR,
+                        label=q,
+                        short_desc="Equator - Enter to Copy",
+                        target=self.PRIORITY_3 + q,
+                        args_hint=kp.ItemArgsHint.FORBIDDEN,
+                        hit_hint=kp.ItemHitHint.IGNORE,
+                        data_bag=q
+                    ))
+
+            # Many results
+            else:
+                out = results_exp.getOutputStr()
+                suggestions.append(self.create_item(
+                    category=self.ITEMCAT_VAR,
+                    label="Copy all Solutions",
+                    short_desc="Equator",
+                    target=self.PRIORITY_1 + out,
+                    args_hint=kp.ItemArgsHint.FORBIDDEN,
+                    hit_hint=kp.ItemHitHint.IGNORE,
+                    data_bag = out
+                ))
+                
+                for i, s in enumerate(results):
+                    exprs = '; '.join(s[1])
+                    eqtns = '; '.join(s[0])
+                    if len(exprs) and len(eqtns):
+                        r = exprs + "; " + eqtns
+                    else:
+                        r = exprs + eqtns
+                    suggestions.append(self.create_item(
+                        category=self.ITEMCAT_VAR,
+                        label=r,
+                        short_desc=f"Equator - Solution {i+1} - Enter to copy",
+                        target=self.PRIORITY_3 + r,
+                        args_hint=kp.ItemArgsHint.FORBIDDEN,
+                        hit_hint=kp.ItemHitHint.IGNORE,
+                        data_bag=r
+                    ))
         
-        except Exception as e:
+        except eq.EqException as e:
             suggestions.append(self.create_error_item(
-                label=expression,
+                label="Equator - Error",
                 short_desc=str(e)))
             #print(e)
         
@@ -66,7 +170,9 @@ class Equator(kp.Plugin):
         if item.category() != self.ITEMCAT_VAR:
             return
         if item and (item.category() == self.ITEMCAT_VAR):
-            kpu.set_clipboard(item.target())
+            output = item.data_bag()
+            if len(output):
+                kpu.set_clipboard(output)
 
     def on_events(self, flags):
         if flags & kp.Events.PACKCONFIG:
