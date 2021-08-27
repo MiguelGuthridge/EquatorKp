@@ -164,7 +164,7 @@ class Equator(kp.Plugin):
                 short_desc=str(e)))
             #print(e)
         
-        self.set_suggestions(suggestions, kp.Match.ANY, kp.Sort.LABEL_ASC)
+        self.set_suggestions(suggestions, kp.Match.ANY, kp.Sort.TARGET_ASC)
 
     def on_execute(self, item, action):
         if item.category() != self.ITEMCAT_VAR:
